@@ -15,7 +15,6 @@ class ConcreteMossSimilarity(MossSimilarity):
         _self._self = self
         _self._other = other
 
-
     @property
     def self_code(self) -> str:
         return self._self.code
