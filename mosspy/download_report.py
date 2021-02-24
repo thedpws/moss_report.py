@@ -13,7 +13,7 @@ def process_url(url, urls, base_url, path, on_read):
     response = urlopen(url)
     html = response.read()
     on_read(url)
-    soup = BeautifulSoup(html, 'lxml')
+    soup = BeautifulSoup(html, 'html.parser')
     file_name = os.path.basename(url)
 
     if not file_name or len(file_name.split(".")) == 1: # Not file name eg. 123456789 or is None
