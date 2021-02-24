@@ -1,4 +1,8 @@
+import requests
+
 from .moss_report import MossReport
+from .concrete_moss_report import ConcreteMossReport
+from .concrete_moss_similarity import ConcreteMossSimilarity
 from .moss_html_parser import MossHTMLParser, MossMatchParser
 from .moss_report_factory import MossReportFactory
 
@@ -8,8 +12,7 @@ class ConcreteMossReportFactory(MossReportFactory):
 
         parser = MossHTMLParser()
 
-        print(html)
-        parser.feed(html)
+        parser.feed(moss_html_report)
 
         filenames_to_similarities: Mapping[str, MossSimilarity] = dict()
 
@@ -19,43 +22,33 @@ class ConcreteMossReportFactory(MossReportFactory):
             match_parser._base_url = '/'.join(url.split('/')[:-1])
             match_parser.feed(requests.get(url).content.decode())
 
-            if not len(match_parser._codes) == 2:
-                raise Exception(str(match_parser._codes))
-            code1 = match_parser._codes[0]
-            code2 = match_parser._codes[1]
+            code1, code2 = match_parser._codes[0], match_parser._codes[1]
 
-            print(url, results)
             ts1, ts2 = results
 
             filename1, percent1, code_block_slices1 = ts1
             filename2, percent2, code_block_slices2 = ts2
 
-            item_1 = {
-                'code'              : code1,
-                'filename'          : filename1,
-                'code_block_slices' : code_block_slices1,
-                'percent_similar'   : percent1,
-            }
+            class Record:
+                def __init__(self, code, filename, percent_similar, code_block_slices):
+                    self.code = code
+                    self.filename = filename
+                    self.percent_similar = percent_similar
+                    self.code_block_slices = code_block_slices
 
-            item_2 = {
-                'code'              : code2,
-                'filename'          : filename2,
-                'code_block_slices' : code_block_slices2,
-                'percent_similar'   : percent2,
-            }
+            item_1 = Record(code1, filename1, percent1, code_block_slices1)
+            item_2 = Record(code2, filename2, percent2, code_block_slices2)
 
-            obj_1, obj_2 = object(), object()
-            for k,v in item_1.items():
-                setattr(obj_1, k, v)
-            for k,v in item_2.items():
-                setattr(obj_2, k, v)
 
-            similarities = filenames_to_similarities.get(filename1, default=None) or []
-            similarities.append(ConcreteMossSimilarity(self=obj_1, other=obj_2))
-            filenames_to_similarities.put(filename1, similarities)
 
-            similarities = filenames_to_similarities.get(filename2, default=None) or []
-            similarities.append(ConcreteMossSimilarity(self=obj_2, other=obj_1))
-            filenames_to_similarities.put(filename2, similarities)
 
-    return ConcreteMossReport(filenames_to_similarities)
+            similarities = filenames_to_similarities.get(filename1, None) or []
+            similarities.append(ConcreteMossSimilarity(self=item_1, other=item_2))
+            filenames_to_similarities[filename1] = similarities
+
+            similarities = filenames_to_similarities.get(filename2, None) or []
+            similarities.append(ConcreteMossSimilarity(self=item_2, other=item_1))
+            filenames_to_similarities[filename2] = similarities
+
+        print(filenames_to_similarities.items())
+        return ConcreteMossReport(filenames_to_similarities)

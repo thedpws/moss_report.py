@@ -55,3 +55,6 @@ class ConcreteMossSimilarity(MossSimilarity):
     def other(self):
         return self.other
 
+    def __repr__(self) -> str:
+        return f'{self.self_filename} - {self.other_filename} ({self.self_percent_similar}%)'
+
