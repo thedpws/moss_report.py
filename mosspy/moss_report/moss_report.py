@@ -72,6 +72,7 @@ class MossSimilarity(ABC):
 class MossReport(ABC):
 
     @property
+    @abstractmethod
     def get_similarities(self, self_filename: str) -> List[MossSimilarity]:
         """Returns the similarities of the program with filename "self_filename"."""
 
