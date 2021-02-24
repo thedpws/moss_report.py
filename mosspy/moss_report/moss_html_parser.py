@@ -87,8 +87,3 @@ class MossHTMLParser(HTMLParser):
     def handle_endtag(self, tag):
         self._capture_data = False
 
-class MossRecord:
-
-    def filename(self) -> str:
-        return self._filename
-
